@@ -14,7 +14,13 @@ func main() {
 	command := args[1]
 	switch command {
 	case "init":
-		err := initRepo()
+		var err error
+		const DefBranch = "main"
+		if len(args) < 3 {
+			err = initRepo(DefBranch)
+		} else {
+			err = initRepo(args[2])
+		}
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -26,8 +32,13 @@ func main() {
 	}
 }
 
-func initRepo() error {
+func initRepo(defBranch string) error {
 	if err := createDirs(); err != nil {
+		return err
+	}
+	// head points to the which branch is currently checked out
+	// refs/heads/master or heads/main contains SHA-256 of the latest commit on branch
+	if err := createHead(defBranch); err != nil {
 		return err
 	}
 	return nil
@@ -38,6 +49,18 @@ func createDirs() error {
 		if err := os.MkdirAll(paths[i], 0755); err != nil {
 			return err
 		}
+	}
+	return nil
+}
+func createHead(defBranch string) error {
+	file, err := os.Create(".goit/HEAD")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = file.WriteString("ref: refs/heads/" + defBranch)
+	if err != nil {
+		return err
 	}
 	return nil
 }
