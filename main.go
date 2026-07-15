@@ -1,7 +1,10 @@
 package main
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"os"
 )
 
@@ -26,6 +29,16 @@ func main() {
 			return
 		}
 		fmt.Println("Initialized repo successfully")
+	case "hash-object":
+		if len(args) < 3 {
+			fmt.Println("no file name provided,Usage: goit hash-object <filename>")
+			return
+		}
+		if err := hashObject(args[2]); err != nil {
+			fmt.Println(err)
+			return
+		}
+
 	default:
 		fmt.Println("unknown command")
 
@@ -37,7 +50,7 @@ func initRepo(defBranch string) error {
 		return err
 	}
 	// head points to the which branch is currently checked out
-	// refs/heads/master or heads/main contains SHA-256 of the latest commit on branch
+	// refs/heads/master or heads/main contains SHA1 of the latest commit on branch
 	if err := createHead(defBranch); err != nil {
 		return err
 	}
@@ -62,5 +75,32 @@ func createHead(defBranch string) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+func hashObject(path string) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	var buffer [4096]byte
+	hasher := sha1.New()
+	for {
+		n, err := file.Read(buffer[:])
+		if n > 0 {
+			_, writeErr := hasher.Write(buffer[:n])
+			if writeErr != nil {
+				return writeErr
+			}
+		}
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+	}
+	hash := hasher.Sum(nil)
+	fmt.Println(hex.EncodeToString(hash))
 	return nil
 }
