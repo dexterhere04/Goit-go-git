@@ -81,6 +81,46 @@ func main() {
 		if err := lsTree(args[2]); err != nil {
 			fmt.Println(err)
 		}
+	case "commit-tree":
+		if len(args) < 5 {
+			fmt.Println("Usage: goit commit-tree <tree> [-p <parent>] -m <message>")
+			return
+		}
+		var parent, message string
+		i := 2
+		for i < len(args) {
+			switch args[i] {
+			case "-p":
+				if i+1 < len(args) {
+					parent = args[i+1]
+					i += 2
+				} else {
+					fmt.Println("Usage: goit commit-tree <tree> [-p <parent>] -m <message>")
+					return
+				}
+			case "-m":
+				if i+1 < len(args) {
+					message = args[i+1]
+					i += 2
+				} else {
+					fmt.Println("Usage: goit commit-tree <tree> [-p <parent>] -m <message>")
+					return
+				}
+			default:
+				i++
+			}
+		}
+		treeHash := args[2]
+		if treeHash == "-p" || treeHash == "-m" {
+			fmt.Println("Usage: goit commit-tree <tree> [-p <parent>] -m <message>")
+			return
+		}
+		hash, err := commitTree(treeHash, parent, message)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(hash)
 	default:
 		fmt.Println("unknown command")
 
