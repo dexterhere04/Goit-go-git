@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -52,7 +53,9 @@ func readHeadBranch() (string, error) {
 		return "", fmt.Errorf("invalid HEAD")
 	}
 	branchRef := ref[5:]
-	branchRef = branchRef[:len(branchRef)-1] // strip newline
+	if branchRef[len(branchRef)-1] == '\n' {
+		branchRef = branchRef[:len(branchRef)-1]
+	}
 	return branchRef, nil
 }
 
@@ -62,14 +65,43 @@ func readRef(path string) (string, error) {
 		return "", err
 	}
 	hash := string(data)
-	hash = hash[:len(hash)-1] // strip newline
+	if hash[len(hash)-1] == '\n' {
+		hash = hash[:len(hash)-1]
+	}
 	return hash, nil
 }
 
 func writeRef(path, hash string) error {
 	fullPath := ".goit/" + path
-	if err := os.MkdirAll(fullPath[:len(fullPath)-len(hash)-1], 0755); err != nil {
+	dir := fullPath[:strings.LastIndex(fullPath, "/")]
+	if err := os.MkdirAll(dir, 0755); err != nil {
 		return err
 	}
 	return os.WriteFile(fullPath, []byte(hash+"\n"), 0644)
+}
+
+func goitCommit(message string) (string, error) {
+	treeHash, err := writeTree(".")
+	if err != nil {
+		return "", err
+	}
+
+	var parent string
+	branchRef, err := readHeadBranch()
+	if err == nil {
+		if parentHash, err := readRef(".goit/" + branchRef); err == nil {
+			parent = parentHash
+		}
+	}
+
+	commitHash, err := commitTree(treeHash, parent, message)
+	if err != nil {
+		return "", err
+	}
+
+	if branchRef, err := readHeadBranch(); err == nil {
+		writeRef(branchRef, commitHash)
+	}
+
+	return commitHash, nil
 }

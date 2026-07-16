@@ -121,6 +121,17 @@ func main() {
 			return
 		}
 		fmt.Println(hash)
+	case "commit":
+		if len(args) != 4 || args[2] != "-m" {
+			fmt.Println("Usage: goit commit -m <message>")
+			return
+		}
+		hash, err := goitCommit(args[3])
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(hash)
 	default:
 		fmt.Println("unknown command")
 
