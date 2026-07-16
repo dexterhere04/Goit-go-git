@@ -45,6 +45,16 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+	case "cat-file":
+		if len(args) != 4 || args[2] != "-p" {
+			fmt.Println("Usage: goit cat-file -p <hash>")
+			return
+		}
+
+		if err := catFile(args[3]); err != nil {
+			fmt.Println(err)
+			return
+		}
 	default:
 		fmt.Println("unknown command")
 

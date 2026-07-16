@@ -17,3 +17,14 @@ func hashObject(path string, write bool) error {
 	fmt.Println(obj.Hash)
 	return nil
 }
+func catFile(hash string) error {
+
+	obj, err := ReadObject(hash)
+	if err != nil {
+		return err
+	}
+
+	fmt.Print(string(obj.Data))
+
+	return nil
+}

@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"compress/zlib"
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type Object struct {
@@ -54,4 +57,52 @@ func StoreObject(obj *Object) error {
 		return err
 	}
 	return nil
+}
+func ReadObject(hash string) (*Object, error) {
+
+	dir := hash[:2]
+	file := hash[2:]
+
+	objectPath := filepath.Join(".goit", "objects", dir, file)
+
+	f, err := os.Open(objectPath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	// Decompress using zlib.
+	zr, err := zlib.NewReader(f)
+	if err != nil {
+		return nil, err
+	}
+	defer zr.Close()
+
+	// Read the complete decompressed object.
+	data, err := io.ReadAll(zr)
+	if err != nil {
+		return nil, err
+	}
+
+	// Find the NULL byte separating header and body.
+	idx := bytes.IndexByte(data, 0)
+	if idx == -1 {
+		return nil, fmt.Errorf("invalid git object")
+	}
+
+	header := string(data[:idx])
+	body := data[idx+1:]
+
+	// Header format:
+	// blob 123
+	parts := strings.Split(header, " ")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid object header")
+	}
+
+	return &Object{
+		Hash: hash,
+		Type: parts[0],
+		Data: body,
+	}, nil
 }
