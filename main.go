@@ -66,6 +66,13 @@ func main() {
 		default:
 			fmt.Println("Usage: goit cat-file <-p|-t|-s> <hash>")
 		}
+	case "write-tree":
+		hash, err := writeTree(".")
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println(hash)
 	default:
 		fmt.Println("unknown command")
 
