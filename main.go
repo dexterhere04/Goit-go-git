@@ -26,15 +26,25 @@ func main() {
 		}
 		fmt.Println("Initialized repo successfully")
 	case "hash-object":
-		if len(args) < 3 {
-			fmt.Println("no file name provided,Usage: goit hash-object <filename>")
+		write := false
+		var filename string
+		switch {
+		case len(args) == 3:
+			filename = args[2]
+
+		case len(args) == 4 && args[2] == "-w":
+			write = true
+			filename = args[3]
+
+		default:
+			fmt.Println("Usage: goit hash-object [-w] <file>")
 			return
 		}
-		if err := hashObject(args[2]); err != nil {
+		err := hashObject(filename, write)
+		if err != nil {
 			fmt.Println(err)
 			return
 		}
-
 	default:
 		fmt.Println("unknown command")
 
