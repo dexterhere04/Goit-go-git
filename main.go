@@ -73,6 +73,14 @@ func main() {
 			return
 		}
 		fmt.Println(hash)
+	case "ls-tree":
+		if len(args) != 3 {
+			fmt.Println("Usage: goit ls-tree <hash>")
+			return
+		}
+		if err := lsTree(args[2]); err != nil {
+			fmt.Println(err)
+		}
 	default:
 		fmt.Println("unknown command")
 

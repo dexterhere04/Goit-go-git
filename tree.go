@@ -88,6 +88,33 @@ func writeTree(dir string) (string, error) {
 	return hashStr, nil
 }
 
+func lsTree(hash string) error {
+	obj, err := ReadObject(hash)
+	if err != nil {
+		return err
+	}
+	if obj.Type != "tree" {
+		return fmt.Errorf("not a tree object: %s", obj.Type)
+	}
+	entries := readTree(obj.Data)
+	for _, e := range entries {
+		objType, err := getObjectType(e.Hash)
+		if err != nil {
+			objType = "unknown"
+		}
+		fmt.Printf("%s %s %s\t%s\n", e.Mode, objType, e.Hash, e.Name)
+	}
+	return nil
+}
+
+func getObjectType(hash string) (string, error) {
+	obj, err := ReadObject(hash)
+	if err != nil {
+		return "", err
+	}
+	return obj.Type, nil
+}
+
 func readTree(body []byte) []TreeEntry {
 	var entries []TreeEntry
 	for len(body) > 0 {
